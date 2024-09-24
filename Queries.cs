@@ -180,6 +180,6 @@ public static class Queries
           }
         }
       }
-    }
 
+    }
 }
