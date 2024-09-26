@@ -7,7 +7,7 @@ namespace library.Queries;
 public static class Queries
 {
 
-    static string connectionString = "Host=localhost;Username=kngval;Password=kngvalarch;Database=library";
+    static string connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")!;
     public static void GetAllBooks()
     {
         List<BookEntity> books = new List<BookEntity>();
