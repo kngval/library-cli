@@ -7,10 +7,11 @@ using Npgsql;
 public class AuthHandler
 {
 
-    private readonly string _connectionString = "Host=localhost;Username=kngval;Password=kngvalarch;Database=library";
+    private readonly string _connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")!;
 
     public void Register(string username, string password)
     {
+        string hashedPassword = HashPassword(password);
         using (var conn = new NpgsqlConnection(_connectionString))
         {
             conn.Open();
@@ -32,7 +33,7 @@ public class AuthHandler
                     using (var cmd = new NpgsqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@Username", username);
-                        cmd.Parameters.AddWithValue("@Password", password);
+                        cmd.Parameters.AddWithValue("@Password", hashedPassword);
                         cmd.ExecuteNonQuery();
 
                         Console.WriteLine($"{username} is successfully registered.");
@@ -47,9 +48,41 @@ public class AuthHandler
         }
     }
 
-    public void Login(string username,string password)
+    public bool Login(string username,string password)
     {
-      
+      using(var conn = new NpgsqlConnection(_connectionString))
+      {
+        conn.Open();
+
+        string userExistsQuery = @"
+          SELECT password  
+          FROM users 
+          WHERE users.username = @Username
+          ";
+        using(var cmd = new NpgsqlCommand(userExistsQuery,conn))
+        {
+          cmd.Parameters.AddWithValue("@Username",username);
+
+          var result = cmd.ExecuteScalar();
+          if(result == null)
+          {
+            Console.WriteLine("User does not exist");
+            return false;
+          } else {
+           string dbHashedPassword = result.ToString()!; 
+           string hashedPassword = HashPassword(password);
+
+           if(hashedPassword == dbHashedPassword)
+           {
+             Console.WriteLine("Login Successful");
+             return true;
+           } else {
+             Console.WriteLine("Wrong password.");
+             return false;
+           }
+          }
+        }
+      }
     }
 
 
