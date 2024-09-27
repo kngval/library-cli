@@ -4,12 +4,12 @@ using System.Security.Cryptography;
 using System.Text;
 using Npgsql;
 
-public class AuthHandler
+public  static class AuthHandler
 {
 
-    private readonly string _connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")!;
+    private static readonly string _connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")!;
 
-    public void Register(string username, string password)
+    public static void Register(string username, string password)
     {
         string hashedPassword = HashPassword(password);
         using (var conn = new NpgsqlConnection(_connectionString))
@@ -17,9 +17,9 @@ public class AuthHandler
             conn.Open();
 
             string userExists = @"
-        SELECT 
-        FROM users
-        WHERE users.username = @Username
+        SELECT username  
+        FROM users 
+        WHERE username = @Username
         ";
             using (var userExistsCmd = new NpgsqlCommand(userExists, conn))
             {
@@ -48,7 +48,7 @@ public class AuthHandler
         }
     }
 
-    public bool Login(string username,string password)
+    public static bool Login(string username,string password)
     {
       using(var conn = new NpgsqlConnection(_connectionString))
       {
@@ -57,7 +57,7 @@ public class AuthHandler
         string userExistsQuery = @"
           SELECT password  
           FROM users 
-          WHERE users.username = @Username
+          WHERE username = @Username
           ";
         using(var cmd = new NpgsqlCommand(userExistsQuery,conn))
         {
@@ -86,7 +86,7 @@ public class AuthHandler
     }
 
 
-    private string HashPassword(string password)
+    private static string HashPassword(string password)
     {
       using(var hmac = new HMACSHA256())
       {
