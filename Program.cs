@@ -11,6 +11,7 @@ while (active)
     Console.WriteLine("2. Login");
     Console.WriteLine("3. Exit");
 
+    Console.Write("\nInput : ");
     string? authInput = Console.ReadLine();
 
     if (string.IsNullOrEmpty(authInput) || string.IsNullOrWhiteSpace(authInput))
@@ -55,11 +56,11 @@ while (active)
                 Console.WriteLine("Invalid Password");
                 return;
             }
-            AuthHandler.Login(loginUsername,loginPassword);
+            isLoggedIn = AuthHandler.Login(loginUsername,loginPassword);
             break;
 
         case "3":
-            isLoggedIn = true;
+            Console.WriteLine("\n Exiting Program... \n");
             active = false;
             break;
     }

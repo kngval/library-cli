@@ -2,6 +2,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using BCrypt.Net;
 using Npgsql;
 
 public  static class AuthHandler
@@ -70,9 +71,8 @@ public  static class AuthHandler
             return false;
           } else {
            string dbHashedPassword = result.ToString()!; 
-           string hashedPassword = HashPassword(password);
 
-           if(hashedPassword == dbHashedPassword)
+           if(BCrypt.Net.BCrypt.Verify(password, dbHashedPassword))
            {
              Console.WriteLine("Login Successful");
              return true;
@@ -88,11 +88,7 @@ public  static class AuthHandler
 
     private static string HashPassword(string password)
     {
-      using(var hmac = new HMACSHA256())
-      {
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hash);
-      }
+     return BCrypt.Net.BCrypt.HashPassword(password); 
     }
 
     
