@@ -6,7 +6,7 @@ bool active = true;
 bool isLoggedIn = false;
 while (active)
 {
-    Console.WriteLine("\nLibrary System - CLI");
+    Console.WriteLine("\nLibrary System - AUTHENTICATION !");
     Console.WriteLine("1. Register");
     Console.WriteLine("2. Login");
     Console.WriteLine("3. Exit");
@@ -14,10 +14,6 @@ while (active)
     Console.Write("\nInput : ");
     string? authInput = Console.ReadLine();
 
-    if (string.IsNullOrEmpty(authInput) || string.IsNullOrWhiteSpace(authInput))
-    {
-        Console.WriteLine("Invalid input");
-    }
 
     switch (authInput)
     {
@@ -29,7 +25,7 @@ while (active)
 
             if (string.IsNullOrWhiteSpace(authUsername))
             {
-                Console.WriteLine("Invalid Username");
+                Console.WriteLine("~Invalid Username");
                 return;
             }
             if (string.IsNullOrWhiteSpace(authPassword))
@@ -53,15 +49,19 @@ while (active)
             }
             if (string.IsNullOrWhiteSpace(loginPassword))
             {
-                Console.WriteLine("Invalid Password");
+                Console.WriteLine("~Invalid Password");
                 return;
             }
             isLoggedIn = AuthHandler.Login(loginUsername,loginPassword);
             break;
 
         case "3":
-            Console.WriteLine("\n Exiting Program... \n");
+            Console.WriteLine("\n~Exiting Program... \n");
             active = false;
+            break;
+
+        default : 
+            Console.WriteLine("~Invalid Input.");
             break;
     }
 }
@@ -69,7 +69,7 @@ while (active)
 while (isLoggedIn)
 {
 
-    Console.WriteLine("\nLibrary System - CLI");
+    Console.WriteLine("\nLibrary System - DASHBOARD !");
     Console.WriteLine("1. List All Book");
     Console.WriteLine("2. Add a Book");
     Console.WriteLine("3. Delete a Book");
@@ -77,11 +77,6 @@ while (isLoggedIn)
 
     Console.Write("\nChoose An Option : ");
     string? input = Console.ReadLine();
-
-    // if (string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input))
-    // {
-    //     Console.WriteLine("Invalid input");
-    // }
 
     switch (input)
     {
@@ -101,12 +96,12 @@ while (isLoggedIn)
             Console.ReadLine();
             break;
         case "4":
-            Console.WriteLine("Exiting program...");
+            Console.WriteLine("~Exiting program...");
             isLoggedIn = false;
             break;
 
         default:
-            Console.WriteLine("~ Invalid Input");
+            Console.WriteLine("~Invalid Input");
             break;
     }
 }
