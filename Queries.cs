@@ -18,10 +18,14 @@ public static class Queries
             string query = @"
               SELECT b.Id,b.Title,a.Id,a.Author 
               FROM books b 
-              JOIN authors a on b.AuthorId=a.Id";
+              JOIN authors a on b.AuthorId=a.Id 
+              WHERE b.userId = @UserId
+              ";
+
 
             using (var cmd = new NpgsqlCommand(query, conn))
             {
+                cmd.Parameters.AddWithValue("@UserId", AuthHandler.globalUserId!);
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -112,13 +116,14 @@ public static class Queries
             }
 
             string insertBookQuery = @"
-            INSERT INTO books (Title,AuthorId) 
-            VALUES (@Title,@AuthorId);
+            INSERT INTO books (title,authorId,userId) 
+            VALUES (@Title,@AuthorId,@UserId);
             ";
             using (var insertBookCmd = new NpgsqlCommand(insertBookQuery, conn))
             {
                 insertBookCmd.Parameters.AddWithValue("@Title", title);
                 insertBookCmd.Parameters.AddWithValue("@AuthorId", authorId);
+                insertBookCmd.Parameters.AddWithValue("@UserId", AuthHandler.globalUserId!);
 
                 insertBookCmd.ExecuteNonQuery();
             }
@@ -130,56 +135,77 @@ public static class Queries
 
     public static void DeleteBook()
     {
-      GetAllBooks();
+        List<BookEntity> books = new List<BookEntity>();
 
-      Console.WriteLine("\n To delete, enter the number of the book from the list.");
-      
-      if(!int.TryParse(Console.ReadLine(), out int bookId))
-      {
-        Console.WriteLine("Invalid input. Please enter a valid Book Id");
-        return;
-      }
-
-      using(var conn = new NpgsqlConnection(connectionString))
-      {
-        conn.Open();
-        
-        string checkBookQuery = @"
-          SELECT COUNT(1) FROM books WHERE books.Id = @bookId
-          ";
-        using(var checkBookCmd = new NpgsqlCommand(checkBookQuery,conn))
+        using (var conn = new NpgsqlConnection(connectionString))
         {
-          checkBookCmd.Parameters.AddWithValue("@bookId",bookId);
+            conn.Open();
 
-          long exists = (long)checkBookCmd.ExecuteScalar()!;
+            string getallBooks = @"
+              SELECT b.id,b.title,a.Id,a.Author 
+              FROM books b 
+              JOIN authors a ON b.AuthorId = a.Id 
+              WHERE userId = @UserId";
+            
+            using (var getAllBooksCmd = new NpgsqlCommand(getallBooks,conn))
+            {
+              getAllBooksCmd.Parameters.AddWithValue("@UserId", AuthHandler.globalUserId!);
 
-          if(exists == 0)
-          {
-            Console.WriteLine($"Book with Id '{bookId}' does not exist.");
-            return;
-          }
+              using(var reader = getAllBooksCmd.ExecuteReader())
+              {
+                while(reader.Read())
+                {
+                  books.Add(new BookEntity{
+                    Id = reader.GetInt32(0),
+                    Title = reader.GetString(1),
+                    AuthorId = reader.GetInt32(2),   
+                    Author = new AuthorEntity {
+                      Id = reader.GetInt32(2),
+                      Author = reader.GetString(3)
+                    }
+                  });
+                }
+              }
+            }
+            int index = 1;
+            foreach(var book in books)
+            {
+              Console.WriteLine($"{index}. '{book.Title}' by '{book.Author!.Author}'");
+            }
+
+            Console.WriteLine("\n~To delete, enter the number of the book from the list.\n");
+            Console.Write("Input : ");
+            if (!int.TryParse(Console.ReadLine(), out int bookIndex) || bookIndex < 1 || bookIndex > books.Count)
+            {
+                Console.WriteLine("Invalid input. Please enter a valid Book Id");
+                return;
+            }
+
+            int bookId = books[bookIndex - 1].Id;
 
 
+            string deleteBookQuery = @"
+            DELETE FROM books 
+            WHERE books.id = @bookId 
+            AND books.userId = @UserId
+             ";
+            using (var deleteBookCmd = new NpgsqlCommand(deleteBookQuery, conn))
+            {
+                deleteBookCmd.Parameters.AddWithValue("@bookId", bookId);
+                deleteBookCmd.Parameters.AddWithValue("@UserId", AuthHandler.globalUserId!);
+                int rowsAffected = deleteBookCmd.ExecuteNonQuery();
+
+                if (rowsAffected > 0)
+                {
+                    Console.WriteLine($"Book with Id '{bookId}' successfully deleted !");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("An error occured. Book was not deleted.");
+                    return;
+                }
+            }
         }
-
-        string deleteBookQuery = @"
-          DELETE FROM books WHERE books.Id = @bookId
-          ";
-        using(var deleteBookCmd = new NpgsqlCommand(deleteBookQuery,conn))
-        {
-          deleteBookCmd.Parameters.AddWithValue("@bookId",bookId);
-          int rowsAffected = deleteBookCmd.ExecuteNonQuery();
-
-          if(rowsAffected > 0)
-          {
-            Console.WriteLine($"Book with Id '{bookId}' successfully deleted !");
-            return;
-          } else {
-            Console.WriteLine("An error occured. Book was not deleted.");
-            return;
-          }
-        }
-      }
-
     }
 }
