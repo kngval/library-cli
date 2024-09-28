@@ -5,11 +5,12 @@ using System.Text;
 using BCrypt.Net;
 using Npgsql;
 
-public  static class AuthHandler
+public static class AuthHandler
 {
 
     private static readonly string _connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION")!;
 
+    public static int? globalUserId;
     public static void Register(string username, string password)
     {
         string hashedPassword = HashPassword(password);
@@ -37,11 +38,13 @@ public  static class AuthHandler
                         cmd.Parameters.AddWithValue("@Password", hashedPassword);
                         cmd.ExecuteNonQuery();
 
-                        Console.WriteLine($"{username} is successfully registered.");
+                        Console.WriteLine($"\n~'{username}' is successfully registered.");
                     }
-                } else {
-                  Console.WriteLine("User already exists.");
-                  return;
+                }
+                else
+                {
+                    Console.WriteLine("\n~User already exists.");
+                    return;
                 }
 
             }
@@ -49,47 +52,81 @@ public  static class AuthHandler
         }
     }
 
-    public static bool Login(string username,string password)
+    public static bool Login(string username, string password)
     {
-      using(var conn = new NpgsqlConnection(_connectionString))
-      {
-        conn.Open();
+        using (var conn = new NpgsqlConnection(_connectionString))
+        {
+            conn.Open();
 
-        string userExistsQuery = @"
-          SELECT password  
+            string userExistsQuery = @"
+          SELECT id,password  
           FROM users 
           WHERE username = @Username
           ";
-        using(var cmd = new NpgsqlCommand(userExistsQuery,conn))
-        {
-          cmd.Parameters.AddWithValue("@Username",username);
+            using (var cmd = new NpgsqlCommand(userExistsQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@Username", username);
 
-          var result = cmd.ExecuteScalar();
-          if(result == null)
-          {
-            Console.WriteLine("User does not exist");
-            return false;
-          } else {
-           string dbHashedPassword = result.ToString()!; 
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int userId = reader.GetInt32(0);
+                        globalUserId = userId;
+                        Console.WriteLine(globalUserId);
+                        string dbHashedPassword = reader.GetString(1);
 
-           if(BCrypt.Net.BCrypt.Verify(password, dbHashedPassword))
-           {
-             Console.WriteLine("Login Successful");
-             return true;
-           } else {
-             Console.WriteLine("Wrong password.");
-             return false;
-           }
-          }
+                        if (BCrypt.Net.BCrypt.Verify(password, dbHashedPassword))
+                        {
+                            Console.WriteLine("\n~Login Successful");
+                            return true;
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("\n~Wrong password.");
+                            return false;
+                        }
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("\n~User does not exist.");
+                        return false;
+                    }
+                }
+
+                // var result = cmd.ExecuteScalar();
+                // Console.WriteLine(result);
+                // if (result == null)
+                // {
+                //     Console.WriteLine("User does not exist");
+                //     return false;
+                // }
+                // else
+                // {
+                //     string dbHashedPassword = result.ToString()!;
+                //
+                //     if (BCrypt.Net.BCrypt.Verify(password, dbHashedPassword))
+                //     {
+                //         Console.WriteLine("Login Successful");
+                //         return true;
+                //     }
+                //     else
+                //     {
+                //         Console.WriteLine("Wrong password.");
+                //         return false;
+                //     }
+                // }
+            }
         }
-      }
     }
 
 
     private static string HashPassword(string password)
     {
-     return BCrypt.Net.BCrypt.HashPassword(password); 
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
-    
+
 }
