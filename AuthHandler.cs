@@ -73,12 +73,12 @@ public static class AuthHandler
                     {
                         int userId = reader.GetInt32(0);
                         globalUserId = userId;
-                        Console.WriteLine(globalUserId);
                         string dbHashedPassword = reader.GetString(1);
 
                         if (BCrypt.Net.BCrypt.Verify(password, dbHashedPassword))
                         {
                             Console.WriteLine("\n~Login Successful");
+                            Console.WriteLine($"\n~Logged in as {username}");
                             return true;
 
                         }

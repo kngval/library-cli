@@ -23,7 +23,7 @@ while (active)
         switch (authInput)
         {
             case "1":
-                Console.Write("Enter a username : ");
+                Console.Write("Enter your username : ");
                 string? authUsername = Console.ReadLine();
                 Console.Write("Enter your password : ");
                 string? authPassword = Console.ReadLine();
@@ -90,7 +90,7 @@ while (active)
         {
             case "1":
                 Queries.GetAllBooks();
-                Console.Write("\nPress 'Enter' to go back to menu.");
+                Console.Write("\n~Press 'Enter' to go back to menu.");
                 Console.ReadLine();
                 break;
 
